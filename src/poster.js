@@ -51,7 +51,7 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
   log(`[${platform}] topic=${topic} count=${state.counts[topic]} idx=${state.idx[topic] % arr.length}/${arr.length}${dry ? ' [DRY]' : ''}`)
 
   if (dry) {
-    log(`[${platform}] text: ${bodyFor(platform, { text, source, ecoUrl: 'https://eco.dotrino.com/#<owner>/<cid>' })}`)
+    log(`[${platform}] text: ${bodyFor(platform, { text, source, ecoUrl: 'https://dotrino.com/p/<cid>' })}`)
     return { dry: true, topic, text, source }
   }
 
@@ -64,10 +64,10 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
   if (missing.length) throw new Error(`missing secrets in ns "${NS}": ${missing.join(', ')} (dotrino-vault secret set ${NS} KEY=value)`)
 
   // 1) eco
-  const { eco, url } = await publishEco({ text, source, identity, log })
+  const { eco, url, permalink } = await publishEco({ text, source, identity, log })
 
-  // 2) la red, con el enlace del eco
-  const body = bodyFor(platform, { text, source, ecoUrl: url })
+  // 2) la red, con el enlace del eco: el permalink (tarjeta OG pública) que abre en eco
+  const body = bodyFor(platform, { text, source, ecoUrl: permalink })
   if (platform === 'discord') {
     await postDiscord({ token: secrets.DISCORD_BOT_TOKEN, guild: secrets.DISCORD_GUILD_ID, text: body })
   } else {
@@ -78,7 +78,7 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
   state.counts[topic]++
   state.idx[topic]++
   state.lastTopic = topic
-  state.history.push({ ts: new Date().toISOString(), topic, eco: url, text: body.slice(0, 90) })
+  state.history.push({ ts: new Date().toISOString(), topic, eco: url, permalink, text: body.slice(0, 90) })
   if (state.history.length > 300) state.history = state.history.slice(-300)
   all[platform] = state
   writeState(all)

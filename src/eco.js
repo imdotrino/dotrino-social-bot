@@ -17,6 +17,13 @@ export const TTL_24H = 24 * 60 * 60 * 1000
 export const POS = { lat: -0.1807, lng: -78.4678 }
 export const AUTHOR_NAME = 'Dotrino'
 export const ECO_APP = 'https://eco.dotrino.com/'
+/**
+ * El PERMALINK de cada eco: la página con la tarjeta OG que sirve el node de Dotrino en
+ * modo público (`/p/<cid>`, detrás de dotrino.com). Es lo que va en las redes —un
+ * `#fragment` no da tarjeta: los rastreadores no lo ven— y su botón «Abrir» lleva a eco.
+ */
+export const PERMALINK_BASE = (process.env.SOCIAL_PERMALINK_BASE || 'https://dotrino.com').replace(/\/+$/, '')
+export const permalinkOf = (cid) => `${PERMALINK_BASE}/p/${cid}`
 
 /** Arma y firma un eco. `text` se recorta a lo que cabe; `source` va en `links`. */
 export async function buildEco ({ text, source, identity, now = Date.now() }) {
@@ -68,7 +75,7 @@ export async function publishPublicCopy (eco, identity, { cc = null, pin = true 
       meta: { title: `@${eco.authorName}`, description: String(eco.text || '').slice(0, 200) }
     })
     if (pin) await client.pin(ref.cid)
-    return { cid: ref.cid, owner: ref.owner, url: buildUrl({ owner: ref.owner, cid: ref.cid }, ECO_APP) }
+    return { cid: ref.cid, owner: ref.owner, url: buildUrl({ owner: ref.owner, cid: ref.cid }, ECO_APP), permalink: permalinkOf(ref.cid) }
   } finally {
     if (!cc) { try { await client.close?.() } catch (_) {} }
   }
@@ -84,7 +91,7 @@ export async function publishEco ({ text, source, identity, log = () => {} }) {
   const eco = await buildEco({ text, source, identity })
   log(`eco ${eco.id}: ${eco.text.length} chars, ${eco.tags.length} tags`)
   const ref = await publishPublicCopy(eco, identity)
-  log(`eco: public copy ${ref.cid.slice(0, 20)}… → ${ref.url}`)
+  log(`eco: public copy ${ref.cid.slice(0, 20)}… → ${ref.url} · card ${ref.permalink}`)
   eco.pub = { owner: ref.owner, cid: ref.cid }
   await publishPin(eco, identity)
   log('eco: beacon published (geo)')

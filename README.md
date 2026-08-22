@@ -30,7 +30,9 @@ Quitarlo es revocar ese aparato en el vault.
    pone el beacon en geo (24 h, Quito) y deja la **copia pública pineada** en el node de Dotrino por
    el plano de control (`ContentClient`, como la app). El beacon es efímero; el enlace
    `https://eco.dotrino.com/#<owner>/<cid>` dura lo que el node lo sirva;
-3. **la red**: en X el texto + el enlace del eco; en LinkedIn y Discord además `Fuente:`;
+3. **la red**: en X el texto + el enlace del eco; en LinkedIn y Discord además `Fuente:`. El enlace es el
+   **permalink** `https://dotrino.com/p/<cid>` (la tarjeta OG que sirve el node de Dotrino en modo público,
+   con botón «Abrir» hacia eco): un `#fragment` no da tarjeta en las redes. `SOCIAL_PERMALINK_BASE` lo cambia;
 4. avanza el estado (`~/.local/share/dotrino/social-bot/state.json`) solo si las dos cosas pasaron.
 
 Si eco falla no se publica nada en la red. `--dry` muestra sin publicar; `--only <topic>` fuerza tópico.
