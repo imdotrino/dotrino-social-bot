@@ -8,13 +8,15 @@ apuntan a eco, no al revés.
 
 ## Cómo es un aparato de Dotrino
 
-El bot es un aparato más del acta del perfil de Dotrino, enrolado como **servicio `cn: eco`**
-(`dotrino-vault pair --service eco`). Su certificado lleva solo `vault:secrets:eco`:
+El bot es un aparato más del acta del perfil de Dotrino, enrolado por el camino estándar de los
+agentes headless (`@dotrino/remote-agent/link`). Lo que puede hacer lo dice la invitación con la
+que se emparejó — **`dotrino-vault pair --service eco --scope sign`** —, no un tipo de aparato:
 
-- firma sus ecos con su propia llave (como cualquier aparato de la app; `authorName: Dotrino`);
-- lee **su** cajón de secretos (`BUFFER_API_KEY`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`) del vault —
-  no hay `.env`;
-- **no** puede firmar por el perfil, leer otros cajones ni administrar nada.
+- **`vault:sign`**: firma sus ecos con su propia llave (como cualquier aparato de la app;
+  `authorName: Dotrino`) y abre sesión con el node de contenido por el plano de control;
+- **`vault:secrets:eco`**: lee **su** cajón de secretos (`BUFFER_API_KEY`, `DISCORD_BOT_TOKEN`,
+  `DISCORD_GUILD_ID`) del vault — no hay `.env`;
+- nada más: ni leer ni escribir los datos del perfil, ni otros cajones.
 
 Quitarlo es revocar ese aparato en el vault.
 
@@ -26,23 +28,25 @@ Quitarlo es revocar ese aparato en el vault.
    ítem de `content/social-content.json`;
 2. **eco**: arma el eco (texto recortado a 280 por frase, la fuente en `links`, los `#tags`), lo firma,
    pone el beacon en geo (24 h, Quito) y deja la **copia pública pineada** en el node de Dotrino por
-   su API local (`CONTENT_URL`, por defecto `http://127.0.0.1:3777`). El beacon es efímero; el
-   enlace `https://eco.dotrino.com/#<owner>/<cid>` dura lo que el node lo sirva;
+   el plano de control (`ContentClient`, como la app). El beacon es efímero; el enlace
+   `https://eco.dotrino.com/#<owner>/<cid>` dura lo que el node lo sirva;
 3. **la red**: en X el texto + el enlace del eco; en LinkedIn y Discord además `Fuente:`;
 4. avanza el estado (`~/.local/share/dotrino/social-bot/state.json`) solo si las dos cosas pasaron.
 
 Si eco falla no se publica nada en la red. `--dry` muestra sin publicar; `--only <topic>` fuerza tópico.
 
-## Instalar (en la máquina del node de contenido)
+## Instalar (en cualquier máquina)
 
 ```bash
 git clone git@dotrino:imdotrino/dotrino-social-bot.git && cd dotrino-social-bot && npm install
-# en el vault:      dotrino-vault pair --service eco   → invitación
+# en el vault:      dotrino-vault pair --service eco --scope sign   → invitación
 node bin/cli.js enroll '<invitación>'                   # imprime el código → dotrino-vault approve <código>
 # en el vault:      dotrino-vault secret set eco BUFFER_API_KEY=… DISCORD_BOT_TOKEN=… DISCORD_GUILD_ID=…
 node bin/cli.js whoami && node bin/cli.js channels
 node bin/cli.js post twitter --dry
 ```
+
+La identidad vive en `~/.local/share/dotrino-social-bot/link.json` (`SOCIAL_BOT_DIR` la cambia).
 
 Cron (hora de Ecuador, UTC−5): X 13:00, LinkedIn 16:00, Discord 19:00.
 

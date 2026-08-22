@@ -12,10 +12,12 @@
   },
   "engines": { "node": ">=22" },
   "dependencies": {
+    "@dotrino/content-client": "0.2.2",
     "@dotrino/geo": "0.2.1",
     "@dotrino/identity": "0.56.0",
     "@dotrino/proxy-client": "0.10.1",
-    "@dotrino/vault": "0.29.0"
+    "@dotrino/remote-agent": "0.5.0",
+    "@dotrino/vault": "0.30.0"
   },
   "repository": { "type": "git", "url": "git+https://github.com/imdotrino/dotrino-social-bot.git" }
 }

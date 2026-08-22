@@ -1,14 +1,15 @@
 // Publicar un eco como lo hace la app, pero desde Node: se firma con la llave del
 // aparato, se pone el beacon en geo (24 h, uno por identidad) y se deja la copia
-// PÚBLICA en el node de Dotrino —por su API local, porque el bot corre en la
-// misma máquina que el node y un cert de servicio no abre sesión de control—.
+// PÚBLICA en el node de Dotrino por el plano de control (`ContentClient`), igual que
+// la app —el bot es un aparato del acta y abre sesión con el node como cualquiera—.
 //
 // La copia pública se PINEA: el eco sale del feed a las 24 h, como todos, pero el
-// enlace que quedó en una red sigue abriendo mientras el node lo sirva. Lo
-// efímero es el beacon; la duración del enlace la decide el content (dueño, 2026-08-22).
+// enlace que quedó en una red sigue abriendo mientras el node lo sirva. Lo efímero es
+// el beacon; la duración del enlace la decide el content (dueño, 2026-08-22).
 
 import { randomUUID } from 'node:crypto'
 import { createGeoClient } from '@dotrino/geo'
+import { ContentClient, buildUrl } from '@dotrino/content-client'
 import { canonical, extractLinks, extractTags, fitEco } from './text.js'
 
 export const TTL_24H = 24 * 60 * 60 * 1000
@@ -50,23 +51,27 @@ export async function publishPin (eco, identity, { geoUrl, fetch: f } = {}) {
 }
 
 /**
- * La copia pública en el node (API local, sin auth: solo escucha en loopback).
- * @returns {Promise<{ cid:string, url:string }>}
+ * La copia pública del eco (ya firmado) en el node de su dueño, por el plano de
+ * control, y pineada. Lo mismo que `publishPublicCopy` + `pinPublic` de la app.
+ * @param {{ cc?: any }} [opts]  un `ContentClient` ya conectado (para reusar sesión o para probar)
+ * @returns {Promise<{ cid:string, owner:string, url:string }>}
  */
-export async function publishPublicCopy (eco, identity, { nodeUrl = process.env.CONTENT_URL || 'http://127.0.0.1:3777', pin = true, fetch: f = fetch } = {}) {
-  const base = nodeUrl.replace(/\/+$/, '')
-  const bytes = new TextEncoder().encode(JSON.stringify(eco))
-  const up = await f(`${base}/c?ttl=${TTL_24H}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: bytes })
-  if (!up.ok) throw new Error(`node put failed: ${up.status} ${await up.text().catch(() => '')}`)
-  const { cid } = await up.json()
-  if (!cid) throw new Error('node put answered without cid')
-  const pub = await f(`${base}/public/${cid}`, { method: 'POST' })
-  if (!pub.ok) throw new Error(`node public failed: ${pub.status}`)
-  if (pin) {
-    const pr = await f(`${base}/pin/${cid}`, { method: 'POST' })
-    if (!pr.ok) throw new Error(`node pin failed: ${pr.status}`)
+export async function publishPublicCopy (eco, identity, { cc = null, pin = true } = {}) {
+  const client = cc || await ContentClient.connect({ link: identity.link })
+  try {
+    const bytes = new TextEncoder().encode(JSON.stringify(eco))
+    const ref = await client.put(bytes, {
+      encrypt: false,
+      acl: 'public',
+      mime: 'application/json',
+      ttlMs: TTL_24H,
+      meta: { title: `@${eco.authorName}`, description: String(eco.text || '').slice(0, 200) }
+    })
+    if (pin) await client.pin(ref.cid)
+    return { cid: ref.cid, owner: ref.owner, url: buildUrl({ owner: ref.owner, cid: ref.cid }, ECO_APP) }
+  } finally {
+    if (!cc) { try { await client.close?.() } catch (_) {} }
   }
-  return { cid, url: `${ECO_APP.replace(/\/+$/, '')}/#${identity.owner}/${cid}` }
 }
 
 /** Todo junto: eco firmado → beacon → copia pública pineada → enlace. */

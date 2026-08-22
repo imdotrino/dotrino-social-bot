@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import os from 'node:os'
-import { loadEnv } from '@dotrino/vault/env'
+import { waitForSecrets } from '@dotrino/vault/service'
 import { loadBotIdentity, NS } from './identity.js'
 import { publishEco } from './eco.js'
 import { bodyFor, pickTopic } from './text.js'
@@ -55,12 +55,15 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
     return { dry: true, topic, text, source }
   }
 
-  // Secretos del cajón `eco` del vault (espera a la bóveda; sin ella no se opera).
+  // Secretos del cajón `eco` del vault, con la identidad del enlace (espera a la
+  // bóveda; sin ella no se opera).
+  const identity = await loadBotIdentity()
   const required = platform === 'discord' ? ['DISCORD_BOT_TOKEN', 'DISCORD_GUILD_ID'] : ['BUFFER_API_KEY']
-  const { secrets } = await loadEnv({ ns: NS, required, onRetry: (e, ms) => log(`[vault] ${e.message}; retry in ${Math.round(ms / 1000)}s`) })
+  const secrets = await waitForSecrets({ ...identity.secretsArgs, onRetry: (e, ms) => log(`[vault] ${e.message}; retry in ${Math.round(ms / 1000)}s`) })
+  const missing = required.filter((k) => !(k in secrets))
+  if (missing.length) throw new Error(`missing secrets in ns "${NS}": ${missing.join(', ')} (dotrino-vault secret set ${NS} KEY=value)`)
 
   // 1) eco
-  const identity = await loadBotIdentity()
   const { eco, url } = await publishEco({ text, source, identity, log })
 
   // 2) la red, con el enlace del eco
