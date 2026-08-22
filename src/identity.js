@@ -11,7 +11,7 @@
 // certificó: el `ownerId` del enlace compartible, que rutea al node de Dotrino) y
 // `link` (lo que espera `ContentClient.connect`).
 
-import { loadLink, clientLink, dataDir } from '@dotrino/remote-agent/link'
+import { loadLink, clientLink, dataDir, renewLink } from '@dotrino/remote-agent/link'
 import { pubkeyId } from '@dotrino/identity/capabilities'
 
 export const NS = 'eco'
@@ -35,6 +35,11 @@ export async function loadBotIdentity () {
   if (!raw.enc?.privateJwk) {
     throw Object.assign(new Error('this link has no encryption key (enrolled with an old remote-agent): enroll again'), { code: 'no-enc' })
   }
+  // Una corrida no tiene el tic de renovación de un agente de larga duración: se renueva
+  // aquí si vence pronto (y se persiste), o el bot moriría a los 30 días.
+  const r = await renewLink(raw, { dir })
+  if (r.renewed) console.log(`[identity] cert renewed until ${new Date(r.exp).toISOString().slice(0, 10)}`)
+  else if (r.reason && r.reason !== 'not due') console.warn(`[identity] cert not renewed: ${r.reason}`)
   const link = clientLink(raw, { dir })
   return {
     publickey: raw.device.publickey,

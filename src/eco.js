@@ -74,13 +74,19 @@ export async function publishPublicCopy (eco, identity, { cc = null, pin = true 
   }
 }
 
-/** Todo junto: eco firmado → beacon → copia pública pineada → enlace. */
+/**
+ * Todo junto: eco firmado → copia pública pineada → beacon (con la referencia) → enlace.
+ * La copia va ANTES del beacon para que el beacon lleve `pub = { owner, cid }` (fuera de
+ * lo firmado: el cid es el hash del eco ya firmado, no puede ir dentro) y quien lo vea en
+ * el feed pueda compartir el enlace de ese eco, como en la app.
+ */
 export async function publishEco ({ text, source, identity, log = () => {} }) {
   const eco = await buildEco({ text, source, identity })
   log(`eco ${eco.id}: ${eco.text.length} chars, ${eco.tags.length} tags`)
-  await publishPin(eco, identity)
-  log('eco: beacon published (geo)')
   const ref = await publishPublicCopy(eco, identity)
   log(`eco: public copy ${ref.cid.slice(0, 20)}… → ${ref.url}`)
+  eco.pub = { owner: ref.owner, cid: ref.cid }
+  await publishPin(eco, identity)
+  log('eco: beacon published (geo)')
   return { eco, ...ref }
 }

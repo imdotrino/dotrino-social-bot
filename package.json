@@ -16,7 +16,7 @@
     "@dotrino/geo": "0.2.1",
     "@dotrino/identity": "0.56.0",
     "@dotrino/proxy-client": "0.10.1",
-    "@dotrino/remote-agent": "0.5.1",
+    "@dotrino/remote-agent": "0.5.2",
     "@dotrino/vault": "0.30.0"
   },
   "repository": { "type": "git", "url": "git+https://github.com/imdotrino/dotrino-social-bot.git" }
