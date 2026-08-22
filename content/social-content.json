@@ -1,0 +1,87 @@
+{
+ "_doc": "Contenido del bot social-poster.mjs, POR PLATAFORMA (twitter|linkedin|discord) y por TÓPICO. FOCO (decidido 2026-08-17): SOLO posts informados, cada uno atado a UNA noticia real con su fuente (`source`). Se eliminaron los tópicos publicitarios (seguridad, dotrino, apps, donate): eran autopromoción sin noticia detrás. Queda un único tópico `news` (privacidad, seguridad, IA, soberanía tecnológica). REGLAS: se cuenta la noticia y nada más — NO se añaden frases de lo que Dotrino es, hace o ofrece, ni llamadas a la acción, ni enlaces a dotrino.com; el único enlace del post es la fuente, que el poster añade solo. Español neutro/tuteo SIN voseo, sin emojis, X<=280 contando el enlace corto (~24), y NUNCA se nombra ni se insinúa a un antagonista (ver CLAUDE.md: nombra lo que proteges, nunca a quien amenaza). Refrescar con WebSearch: cada item nuevo necesita fuente verificable.",
+ "twitter": {
+  "news": [
+   {
+    "text": "The Markup documentó que Life360, app de seguridad familiar con decenas de millones de usuarios, vendió datos de ubicación precisa a brokers de datos. El caso derivó en demandas colectivas y en una orden de la FTC. #privacidad #geolocalizacion",
+    "source": "https://themarkup.org/privacy/2021/12/06/the-popular-family-safety-app-life360-is-selling-precise-location-data-on-its-tens-of-millions-of-user"
+   },
+   {
+    "text": "La Electronic Frontier Foundation informa que el Parlamento Europeo bloqueó el escaneo masivo de mensajes privados que planteaba el \"Chat Control\". El cifrado de extremo a extremo queda en pie y el debate sigue abierto. #privacidad #E2EE",
+    "source": "https://www.eff.org/deeplinks/2026/04/eu-parliament-blocks-mass-scanning-our-chats-whats-next"
+   },
+   {
+    "text": "Un informe de 2026 sobre privacidad en redes sociales: el 36% de los usuarios ha eliminado alguna cuenta por preocupación con sus datos y el 76% no confía en que esas plataformas protejan su información. #privacidad",
+    "source": "https://worldmetrics.org/social-media-privacy-issues-statistics/"
+   },
+   {
+    "text": "Desde el 16 de diciembre de 2025 la política de Meta permite usar el contenido público y las conversaciones con su IA como datos de entrenamiento, sin una opción de exclusión sencilla. LinkedIn activó algo parecido por defecto en noviembre. #IA",
+    "source": "https://drainpipe.io/ai-data-privacy-2026-the-ai-privacy-trap/"
+   },
+   {
+    "text": "Un informe proyecta que el mercado del autohosteo alcanzará los 85.200 millones de dólares en 2034, con crecimiento de doble dígito anual, empujado por las fugas de datos y la exigencia de soberanía sobre la información. #SelfHosting",
+    "source": "https://www.webpronews.com/self-hosting-surges-in-2026-market-to-reach-85-2b-by-2034/"
+   },
+   {
+    "text": "La Comisión Europea publicó el 3 de junio de 2026 su Estrategia de Código Abierto, dentro del Paquete de Soberanía Tecnológica: menos dependencia de proveedores externos y menos ataduras a un solo fabricante. #OpenSource #SoberaniaDigital",
+    "source": "https://digital-strategy.ec.europa.eu/en/policies/open-source-strategy"
+   }
+  ]
+ },
+ "linkedin": {
+  "news": [
+   {
+    "text": "Una investigación de The Markup documentó que Life360, app de seguridad familiar con decenas de millones de usuarios, vendió datos de ubicación precisa (incluidos los de menores) a brokers de datos. El caso derivó en demandas colectivas y en una orden de la FTC, y dejó una pregunta abierta para todo el sector: cuando una app pide la ubicación de una familia, ¿queda claro quién más va a poder verla? #privacidad #geolocalizacion",
+    "source": "https://themarkup.org/privacy/2021/12/06/the-popular-family-safety-app-life360-is-selling-precise-location-data-on-its-tens-of-millions-of-user"
+   },
+   {
+    "text": "Según la Electronic Frontier Foundation, el Parlamento Europeo bloqueó el escaneo masivo de mensajes privados que planteaba el llamado \"Chat Control\". Es una decisión relevante para cualquiera que dependa de comunicaciones cifradas de extremo a extremo, desde equipos de trabajo hasta periodistas y personal sanitario. El debate regulatorio no se cierra con esto: la propuesta puede volver en otras formas. #Privacidad #Ciberseguridad",
+    "source": "https://www.eff.org/deeplinks/2026/04/eu-parliament-blocks-mass-scanning-our-chats-whats-next"
+   },
+   {
+    "text": "Un informe de 2026 sobre privacidad en redes sociales pone cifras a algo que se venía notando: el 36% de los usuarios ha eliminado alguna cuenta por preocupación con sus datos y el 76% no confía en que esas plataformas protejan su información. La desconfianza dejó de ser una postura minoritaria y ya se comporta como un factor de mercado. #Privacidad #DatosPersonales",
+    "source": "https://worldmetrics.org/social-media-privacy-issues-statistics/"
+   },
+   {
+    "text": "La política de privacidad de Meta vigente desde el 16 de diciembre de 2025 permite usar el contenido público y las interacciones con su IA como datos de entrenamiento, sin una opción de exclusión sencilla; LinkedIn activó algo parecido por defecto en noviembre. Para cualquier organización que publique en esas plataformas, el dato práctico es que \"aceptar los términos\" ya incluye ceder material para entrenar modelos. #Privacidad #IA",
+    "source": "https://drainpipe.io/ai-data-privacy-2026-the-ai-privacy-trap/"
+   },
+   {
+    "text": "Un informe reciente proyecta que el mercado del autohosteo alcanzará los 85.200 millones de dólares en 2034, creciendo a doble dígito anual. Los motivos que señala son concretos: las brechas de datos, los costes de las nubes centralizadas y la exigencia creciente de soberanía sobre la información. Alojar los datos en infraestructura propia deja de ser una excentricidad técnica y pasa a ser una decisión de estrategia. #SelfHosting #SoberaniaDigital",
+    "source": "https://www.webpronews.com/self-hosting-surges-in-2026-market-to-reach-85-2b-by-2034/"
+   },
+   {
+    "text": "El 3 de junio de 2026 la Comisión Europea publicó su Estrategia de Código Abierto dentro del Paquete de Soberanía Tecnológica, con un objetivo explícito: reducir la dependencia de proveedores no europeos, evitar quedar atado a un solo fabricante y recuperar el control sobre la infraestructura digital. Es la primera vez que el código abierto aparece en ese nivel de la política industrial europea. #OpenSource #SoberaniaDigital",
+    "source": "https://digital-strategy.ec.europa.eu/en/policies/open-source-strategy"
+   }
+  ]
+ },
+ "discord": {
+  "news": [
+   {
+    "text": "Dato que pone los pelos de punta: según una investigación de The Markup, Life360 (la app que muchas familias usan para saber dónde están sus hijos) vendió datos de ubicación precisa a brokers de datos, y acabó con demandas colectivas y una orden de la FTC. Si tienes una app de este tipo instalada, vale la pena leer el caso completo.",
+    "source": "https://themarkup.org/privacy/2021/12/06/the-popular-family-safety-app-life360-is-selling-precise-location-data-on-its-tens-of-millions-of-user"
+   },
+   {
+    "text": "Buenas noticias que cuenta la EFF: el Parlamento Europeo paró el escaneo masivo de mensajes privados que proponía el famoso \"Chat Control\". El cifrado de extremo a extremo se queda como está, aunque la propuesta puede volver por otra vía. Aquí el detalle de qué se votó y qué sigue.",
+    "source": "https://www.eff.org/deeplinks/2026/04/eu-parliament-blocks-mass-scanning-our-chats-whats-next"
+   },
+   {
+    "text": "Números de un informe de 2026 sobre privacidad en redes: el 36% de la gente ya borró alguna cuenta por preocupación con sus datos y el 76% no confía en que esas plataformas protejan su información. Dejo la fuente por si quieres ver el desglose completo.",
+    "source": "https://worldmetrics.org/social-media-privacy-issues-statistics/"
+   },
+   {
+    "text": "Para tenerlo presente: desde el 16 de diciembre de 2025 la política de Meta permite usar tu contenido público y tus conversaciones con su IA como datos de entrenamiento, y no hay una opción de exclusión sencilla. LinkedIn arrancó con algo parecido por defecto en noviembre. El artículo lo explica caso por caso.",
+    "source": "https://drainpipe.io/ai-data-privacy-2026-the-ai-privacy-trap/"
+   },
+   {
+    "text": "Mira este dato: un informe de 2026 calcula que el mercado del autohosteo va camino de los 85.200 millones de dólares para 2034, empujado por las fugas de datos y las ganas de dejar de depender de plataformas ajenas. O sea que quien se monta sus cosas en casa cada vez está menos solo.",
+    "source": "https://www.webpronews.com/self-hosting-surges-in-2026-market-to-reach-85-2b-by-2034/"
+   },
+   {
+    "text": "Noticia para los que seguimos el software libre: el 3 de junio de 2026 la Comisión Europea publicó su Estrategia de Código Abierto dentro del Paquete de Soberanía Tecnológica, con la meta de soltar la dependencia de proveedores externos y no quedar atada a un solo fabricante. Es la primera vez que llega a ese nivel.",
+    "source": "https://digital-strategy.ec.europa.eu/en/policies/open-source-strategy"
+   }
+  ]
+ }
+}
