@@ -14,7 +14,7 @@
   "dependencies": {
     "@dotrino/content-client": "0.2.2",
     "@dotrino/geo": "0.2.1",
-    "@dotrino/identity": "0.56.0",
+    "@dotrino/identity": "0.57.0",
     "@dotrino/proxy-client": "0.10.1",
     "@dotrino/remote-agent": "0.5.2",
     "@dotrino/vault": "0.30.0"
