@@ -4,20 +4,32 @@
   "description": "Bot social de Dotrino: publica primero en eco (como aparato del perfil de Dotrino) y luego comparte el enlace en X, LinkedIn y Discord.",
   "type": "module",
   "license": "MIT",
-  "bin": { "dotrino-social-bot": "bin/cli.js" },
-  "files": ["bin", "src", "content", "README.md"],
+  "bin": {
+    "dotrino-social-bot": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "content",
+    "README.md"
+  ],
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "post": "node bin/cli.js post"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
-    "@dotrino/content-client": "0.2.2",
+    "@dotrino/content-client": "0.2.3",
     "@dotrino/geo": "0.2.1",
-    "@dotrino/identity": "0.57.0",
+    "@dotrino/identity": "0.60.3",
     "@dotrino/proxy-client": "0.10.1",
-    "@dotrino/remote-agent": "0.5.2",
+    "@dotrino/remote-agent": "0.5.3",
     "@dotrino/vault": "0.30.0"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/imdotrino/dotrino-social-bot.git" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imdotrino/dotrino-social-bot.git"
+  }
 }
