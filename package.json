@@ -21,7 +21,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@dotrino/content-client": "0.2.3",
+    "@dotrino/content-client": "0.2.4",
     "@dotrino/geo": "0.2.2",
     "@dotrino/identity": "0.62.0",
     "@dotrino/proxy-client": "0.13.1",
