@@ -26,14 +26,21 @@ Quitarlo es revocar ese aparato en el vault.
 
 1. elige el tópico menos publicado (ponderado por `_weights`, sin repetir el último) y el siguiente
    ítem de `content/social-content.json`;
-2. **eco**: arma el eco (texto recortado a 280 por frase, la fuente en `links`, los `#tags`), lo firma,
+2. **la imagen**: pide el artículo de `source`, toma la `og:image` que él mismo declara y la
+   re-codifica a JPEG ≤ 200 KB (una `og:image` de un medio pasa medio mega; el plano de control
+   lleva 256 KB). Se sube al node como blob **público y pineado**, y esa misma imagen va en los tres
+   sitios: dentro del eco firmado (`media`), como miniatura de la copia pública —que es lo que pinta
+   la tarjeta— y adjunta al post de la red. Sin `og:image` el post sale igual, con el `og.jpg` del
+   ecosistema: una imagen no vale un post;
+3. **eco**: arma el eco (texto recortado a 280 por frase, la fuente en `links`, los `#tags`), lo firma,
    pone el beacon en geo (24 h, Quito) y deja la **copia pública pineada** en el node de Dotrino por
    el plano de control (`ContentClient`, como la app). El beacon es efímero; el enlace
    `https://eco.dotrino.com/#<owner>/<cid>` dura lo que el node lo sirva;
-3. **la red**: en X el texto + el enlace del eco; en LinkedIn y Discord además `Fuente:`. El enlace es el
+4. **la red**: en X el texto + el enlace del eco; en LinkedIn y Discord además `Fuente:`. El enlace es el
    **permalink** `https://dotrino.com/p/<cid>` (la tarjeta OG que sirve el node de Dotrino en modo público,
-   con botón «Abrir» hacia eco): un `#fragment` no da tarjeta en las redes. `SOCIAL_PERMALINK_BASE` lo cambia;
-4. avanza el estado (`~/.local/share/dotrino/social-bot/state.json`) solo si las dos cosas pasaron.
+   con el texto entero, los enlaces del eco y un enlace «Abrir en eco.dotrino.com»): un `#fragment` no da
+   tarjeta en las redes. `SOCIAL_PERMALINK_BASE` lo cambia;
+5. avanza el estado (`~/.local/share/dotrino/social-bot/state.json`) solo si las dos cosas pasaron.
 
 Si eco falla no se publica nada en la red. `--dry` muestra sin publicar; `--only <topic>` fuerza tópico.
 
