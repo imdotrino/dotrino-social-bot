@@ -2,6 +2,10 @@
 // después comparte en la red el enlace de ese eco. Si eco falla, no se publica
 // nada en la red (el enlace es el post); si la red falla, el eco ya salió y se
 // dice — el estado solo avanza cuando las dos cosas pasaron.
+//
+// La imagen sale de la propia noticia (`image.js`) y es la misma en los tres
+// sitios: dentro del eco, en la tarjeta del permalink y adjunta al post de la red.
+// Sin imagen de la noticia, Buffer cae al og.jpg del ecosistema.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -10,6 +14,7 @@ import os from 'node:os'
 import { waitForSecrets } from '@dotrino/vault/service'
 import { loadBotIdentity, NS } from './identity.js'
 import { publishEco } from './eco.js'
+import { imageForSource } from './image.js'
 import { bodyFor, pickTopic } from './text.js'
 import { createPost } from './buffer.js'
 import { postDiscord } from './discord.js'
@@ -52,7 +57,8 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
 
   if (dry) {
     log(`[${platform}] text: ${bodyFor(platform, { text, source, ecoUrl: 'https://dotrino.com/p/<cid>' })}`)
-    return { dry: true, topic, text, source }
+    const img = await imageForSource(source, { log: (m) => log(`[${platform}] ${m}`) })
+    return { dry: true, topic, text, source, image: img ? { from: img.from, bytes: img.bytes.length } : null }
   }
 
   // Secretos del cajón `eco` del vault, con la identidad del enlace (espera a la
@@ -63,22 +69,30 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
   const missing = required.filter((k) => !(k in secrets))
   if (missing.length) throw new Error(`missing secrets in ns "${NS}": ${missing.join(', ')} (dotrino-vault secret set ${NS} KEY=value)`)
 
-  // 1) eco
-  const { eco, url, permalink } = await publishEco({ text, source, identity, log })
+  // 1) la imagen de la noticia (nunca lanza: sin ella el post sale igual)
+  const image = await imageForSource(source, { log })
 
-  // 2) la red, con el enlace del eco: el permalink (tarjeta OG pública) que abre en eco
+  // 2) eco
+  const { eco, url, permalink, image: asset } = await publishEco({ text, source, image, identity, log })
+
+  // 3) la red, con el enlace del eco: el permalink (tarjeta OG pública) que abre en eco
   const body = bodyFor(platform, { text, source, ecoUrl: permalink })
   if (platform === 'discord') {
     await postDiscord({ token: secrets.DISCORD_BOT_TOKEN, guild: secrets.DISCORD_GUILD_ID, text: body })
   } else {
-    const post = await createPost({ token: secrets.BUFFER_API_KEY, channel: platform, text: body, mode: process.env.BUFFER_MODE || 'shareNow' })
-    log(`[${platform}] buffer ${post.id} ${post.status}`)
+    const post = await createPost({
+      token: secrets.BUFFER_API_KEY, channel: platform, text: body,
+      mode: process.env.BUFFER_MODE || 'shareNow',
+      // `undefined` deja el og.jpg del ecosistema; `null` lo dejaría SIN imagen.
+      image: asset || undefined
+    })
+    log(`[${platform}] buffer ${post.id} ${post.status}${asset ? ' (imagen de la noticia)' : ''}`)
   }
 
   state.counts[topic]++
   state.idx[topic]++
   state.lastTopic = topic
-  state.history.push({ ts: new Date().toISOString(), topic, eco: url, permalink, text: body.slice(0, 90) })
+  state.history.push({ ts: new Date().toISOString(), topic, eco: url, permalink, image: asset?.url || null, text: body.slice(0, 90) })
   if (state.history.length > 300) state.history = state.history.slice(-300)
   all[platform] = state
   writeState(all)
