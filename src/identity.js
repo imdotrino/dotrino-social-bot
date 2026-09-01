@@ -29,6 +29,8 @@ export async function loadBotIdentity () {
   if (!raw?.device?.privateJwk) {
     throw Object.assign(new Error(`not enrolled: run \`dotrino-social-bot enroll <invite>\` (dir ${dir})`), { code: 'not-enrolled' })
   }
+  // Solo los papeles del MODELO VIEJO vencen; los nuevos no llevan `exp` y esta guarda los
+  // deja pasar sola.
   if (raw.cert?.exp && raw.cert.exp <= Date.now()) {
     throw Object.assign(new Error('device cert expired: enroll again'), { code: 'expired' })
   }
@@ -38,7 +40,11 @@ export async function loadBotIdentity () {
   // Una corrida no tiene el tic de renovación de un agente de larga duración: se renueva
   // aquí si vence pronto (y se persiste), o el bot moriría a los 30 días.
   const r = await renewLink(raw, { dir })
-  if (r.renewed) console.log(`[identity] cert renewed until ${new Date(r.exp).toISOString().slice(0, 10)}`)
+  // OJO: esto imprimía `new Date(r.exp)`, y `renewLink` ya no devuelve `exp` —el papel no
+  // vence, se ata al acta—. `new Date(undefined).toISOString()` LANZA `RangeError`, así que
+  // la corrida se caía JUSTO DESPUÉS de renovar bien: el papel quedaba guardado y el bot no
+  // publicaba ese día. Una vez por cada cambio de permisos, y en silencio.
+  if (r.renewed) console.log(`[identity] cert renewed · acta #${r.seq}`)
   else if (r.reason && r.reason !== 'not due') console.warn(`[identity] cert not renewed: ${r.reason}`)
   const link = clientLink(raw, { dir })
   return {

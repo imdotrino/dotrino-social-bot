@@ -21,6 +21,13 @@ const usage = () => {
   dotrino-social-bot whoami`)
 }
 
+/** Cómo se describe un papel ahora: por el acta a la que se ató, no por un reloj. */
+function describeCert (cert) {
+  if (typeof cert?.seq === 'number') return `acta #${cert.seq}`
+  if (typeof cert?.exp === 'number') return `modelo viejo · vence ${new Date(cert.exp).toISOString().slice(0, 10)}`
+  return 'sin papel'
+}
+
 try {
   if (!cmd || values.help) { usage(); process.exit(cmd ? 0 : 2) }
   if (cmd === 'enroll') {
@@ -33,7 +40,10 @@ try {
       qr: arg, ns: NS, label: LABEL, dir: identityDir(),
       onChallenge: ({ deviceId, code }) => console.log(`\nDevice ${deviceId}. In the vault run:  dotrino-vault approve ${code}\n`)
     })
-    console.log(`enrolled: scope ${JSON.stringify(link.cert.scope)} · exp ${new Date(link.cert.exp).toISOString()} · dir ${identityDir()}`)
+    // El papel no vence: se ata al ACTA. Esto imprimía `new Date(cert.exp)`, que con un
+    // papel del modelo nuevo es `new Date(undefined)` y LANZA `RangeError` — o sea que
+    // enrolar terminaba bien y el comando se caía en la última línea.
+    console.log(`enrolled: scope ${JSON.stringify(link.cert.scope)} · ${describeCert(link.cert)} · dir ${identityDir()}`)
   } else if (cmd === 'post') {
     const { runOnce } = await import('../src/poster.js')
     await runOnce({ platform: String(arg || ''), dry: values.dry, only: values.only || null })
@@ -47,7 +57,14 @@ try {
   } else if (cmd === 'whoami') {
     const { loadBotIdentity, identityDir } = await import('../src/identity.js')
     const id = await loadBotIdentity()
-    console.log(JSON.stringify({ dir: identityDir(), owner: id.owner, scope: id.raw.cert.scope, exp: new Date(id.raw.cert.exp).toISOString(), publickey: id.publickey }, null, 2))
+    console.log(JSON.stringify({
+      dir: identityDir(), owner: id.owner, scope: id.raw.cert.scope,
+      // `seq` con el modelo nuevo; `exp` solo si todavía lleva uno viejo, que es justo lo
+      // que quien mira necesita saber (le falta migrar y ese sí caduca).
+      seq: id.raw.cert.seq ?? null,
+      ...(typeof id.raw.cert.exp === 'number' ? { exp: new Date(id.raw.cert.exp).toISOString(), legacy: true } : {}),
+      publickey: id.publickey
+    }, null, 2))
   } else { usage(); process.exit(2) }
 } catch (e) {
   console.error(e.message)
