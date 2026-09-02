@@ -25,7 +25,7 @@
     "@dotrino/geo": "0.8.0",
     "@dotrino/identity": "0.78.0",
     "@dotrino/proxy-client": "0.13.1",
-    "@dotrino/remote-agent": "0.7.1",
+    "@dotrino/remote-agent": "0.8.0",
     "@dotrino/vault": "0.52.0",
     "sharp": "0.35.4"
   },
