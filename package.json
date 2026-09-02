@@ -22,11 +22,11 @@
   },
   "dependencies": {
     "@dotrino/content-client": "0.2.4",
-    "@dotrino/geo": "0.2.2",
-    "@dotrino/identity": "0.74.1",
+    "@dotrino/geo": "0.8.0",
+    "@dotrino/identity": "0.78.0",
     "@dotrino/proxy-client": "0.13.1",
-    "@dotrino/remote-agent": "0.7.0",
-    "@dotrino/vault": "0.45.0",
+    "@dotrino/remote-agent": "0.7.1",
+    "@dotrino/vault": "0.52.0",
     "sharp": "0.35.4"
   },
   "repository": {
