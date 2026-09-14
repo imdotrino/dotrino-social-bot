@@ -125,6 +125,8 @@ export function checkPost (platform, text) {
   if (/\p{Extended_Pictographic}/u.test(t)) problems.push('has emoji')
   if (/https?:\/\/|www\./i.test(t)) problems.push('has a link (the system adds the source)')
   if (/dotrino/i.test(t)) problems.push('mentions Dotrino')
+  // El dueño no quiere que los posts pregunten nada (2026-09-14): ni al lector ni retóricas.
+  if (/[?¿]/.test(t)) problems.push('asks a question (no question marks at all)')
   const vos = [...new Set((t.match(VOSEO_RE) || []).map((w) => w.toLowerCase()))]
   if (vos.length) problems.push(`voseo: ${vos.join(', ')}`)
   return problems

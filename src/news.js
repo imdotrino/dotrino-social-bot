@@ -62,22 +62,30 @@ export function publishedSources (state) {
 }
 
 /**
- * La noticia que le toca a una red: fresca, redactada para esa red y sin publicar en
- * ella. Entre esas, la que no salió en NINGUNA red (así cada red cuenta una distinta
- * mientras haya) y, a igualdad, la más reciente. `null` si no hay ninguna.
+ * Las reglas se aplican también AL PUBLICAR, con las de hoy: un texto que se redactó con
+ * reglas anteriores y ya no las cumple no sale.
+ */
+const passes = (it, platform) => checkPost(platform, it.texts?.[platform]).length === 0
+
+/**
+ * La noticia que le toca a una red: fresca, redactada para esa red (y que cumpla las
+ * reglas) y sin publicar en ella. Entre esas, la que no salió en NINGUNA red (así cada
+ * red cuenta una distinta mientras haya) y, a igualdad, la más reciente. `null` si no hay.
  */
 export function pickNews (pool, state, platform, { now = Date.now() } = {}) {
   const published = publishedSources(state)
   const open = (pool?.items || [])
-    .filter((it) => isFresh(it, now) && it.texts?.[platform] && !published.get(normalizeUrl(it.source))?.has(platform))
+    .filter((it) => isFresh(it, now) && passes(it, platform) && !published.get(normalizeUrl(it.source))?.has(platform))
     .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
   return open.find((it) => !published.has(normalizeUrl(it.source))) || open[0] || null
 }
 
-/** Cuántas noticias frescas quedan sin publicar en ninguna red. */
+/** Cuántas noticias frescas, válidas para las tres redes, quedan sin publicar en ninguna. */
 export function readyCount (pool, state, { now = Date.now() } = {}) {
   const published = publishedSources(state)
-  return (pool?.items || []).filter((it) => isFresh(it, now) && !published.has(normalizeUrl(it.source))).length
+  return (pool?.items || [])
+    .filter((it) => isFresh(it, now) && PLATFORM_KEYS.every((p) => passes(it, p)) && !published.has(normalizeUrl(it.source)))
+    .length
 }
 
 /**
@@ -119,6 +127,7 @@ Reglas duras (se comprueban y, si fallan, el post se descarta):
 - Español neutro con TUTEO. Nunca voseo: nada de "podés", "querés", "tenés", "mirá", "fijate", "acá", "vos"; se dice "puedes", "quieres", "tienes", "mira", "fíjate", "aquí", "tú".
 - Sin emojis. Sin enlaces: el de la fuente lo añade el sistema.
 - No menciones a Dotrino ni lo que Dotrino hace. Nada de llamadas a la acción ("descarga", "únete", "síguenos").
+- No hagas preguntas: ni al lector ("¿Qué opinas?") ni retóricas. Ningún signo de interrogación.
 - Solo hechos que estén en el texto del medio. No inventes cifras, fechas, nombres ni citas: si el texto no da un dato, no lo pongas.
 - Atribuye al medio: "Según <medio>…", "<medio> informa que…".
 - Si la noticia está en inglés, cuéntala en español.
@@ -128,7 +137,7 @@ Tono: sobrio e informativo. Cuenta el hecho y por qué importa para los datos de
 Las tres versiones:
 - "twitter": entre 120 y 250 caracteres EN TOTAL, contando uno o dos hashtags al final (#privacidad, #ciberseguridad, #IA…).
 - "linkedin": entre 400 y 850 caracteres, nunca más de 850. Registro profesional: el hecho, el contexto y la consecuencia práctica, sin enumerar todos los detalles. Uno o dos hashtags al final.
-- "discord": entre 200 y 600 caracteres, nunca más de 600. Conversacional y en tuteo, como quien comenta la noticia con la comunidad. Sin hashtags.
+- "discord": entre 200 y 600 caracteres, nunca más de 600. Cercano y en tuteo, como quien comenta la noticia con la comunidad, pero sin preguntarle nada. Sin hashtags.
 
 Responde SOLO con JSON: {"twitter":"…","linkedin":"…","discord":"…"}`
 

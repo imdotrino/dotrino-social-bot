@@ -35,8 +35,8 @@ ya las hay, no hace nada: ni red ni bóveda. Por eso corre antes de cada post.
    y con menos de 300 caracteres de texto la noticia no entra;
 4. **la IA redacta** las tres versiones (X, LinkedIn, Discord) con las reglas de `WRITE_PROMPT`
    (`src/news.js`), y **el código las comprueba** (`checkPost`, `src/text.js`): longitud por red, sin
-   emojis, sin enlaces, sin mencionar a Dotrino, sin voseo. Lo que falla vuelve al modelo una vez; si
-   falla otra vez, la noticia no entra;
+   emojis, sin enlaces, sin mencionar a Dotrino, sin voseo, sin preguntas. Lo que falla vuelve al modelo
+   una vez; si falla otra vez, la noticia no entra. Las mismas reglas se vuelven a aplicar al publicar;
 5. se guardan en `~/.local/share/dotrino/social-bot/news.json` (`SOCIAL_POOL` lo cambia).
 
 `dotrino-social-bot news` lista las noticias redactadas, si siguen frescas y en qué redes salieron.
@@ -97,7 +97,7 @@ No hay contenido escrito a mano. Lo que se edita:
   medio en el post.
 - **`SELECT_PROMPT` y `WRITE_PROMPT`** (`src/news.js`): qué se elige y cómo se cuenta. Español neutro
   (tuteo, sin voseo), sin emojis, solo hechos que estén en el texto del medio y atribuidos a él, tono
-  sobrio, sin mencionar a Dotrino ni llamadas a la acción.
+  sobrio, sin mencionar a Dotrino, sin llamadas a la acción y sin preguntas.
 - **`POST_LIMITS` y `checkPost`** (`src/text.js`): lo que se comprueba en código antes de guardar.
 
 ## Licencia

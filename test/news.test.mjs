@@ -29,6 +29,14 @@ test('pickNews: la que no salió en ninguna red, luego la que no salió en esta,
   assert.equal(readyCount(pool, tw, { now: NOW }), 2)
 })
 
+test('pickNews aplica las reglas de hoy a lo ya redactado: lo que pregunta no sale', () => {
+  const asks = { ...news('https://q.test/1', 1), texts: { ...TEXTS, discord: TEXTS.discord + ' ¿Qué opinas?' } }
+  const pool = { items: [asks, news('https://b.test/2', 5)] }
+  assert.equal(pickNews(pool, {}, 'discord', { now: NOW }).source, 'https://b.test/2')
+  assert.equal(pickNews(pool, {}, 'twitter', { now: NOW }).source, 'https://q.test/1')
+  assert.equal(readyCount(pool, {}, { now: NOW }), 1)
+})
+
 test('articleFrom toma la fecha del artículo y sus párrafos con texto', () => {
   const html = `<html><head><meta content="2026-06-03T09:00:00Z" property="article:published_time">
 <meta property="og:description" content="La &amp; descripción"></head><body>

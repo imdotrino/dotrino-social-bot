@@ -41,6 +41,8 @@ test('checkPost caza largo, emojis, enlaces, Dotrino y voseo', () => {
   assert.match(checkPost('twitter', base + 'https://eff.org').join(), /link/)
   assert.match(checkPost('twitter', base + 'En Dotrino lo cuidamos.').join(), /Dotrino/)
   assert.match(checkPost('twitter', base + 'Mirá el detalle si podés.').join(), /voseo: mirá, podés/)
+  assert.match(checkPost('twitter', base + '¿Qué opinas').join(), /question/)
+  assert.match(checkPost('twitter', base + 'Y ahora qué?').join(), /question/)
   // «además», «después» o «país» no son voseo
   assert.deepEqual(checkPost('twitter', base + 'Además, después del voto, el país sigue.'), [])
   assert.deepEqual(checkPost('mastodon', base), ['unknown platform mastodon'])
