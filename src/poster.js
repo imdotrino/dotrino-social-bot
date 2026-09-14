@@ -1,73 +1,48 @@
-// Una corrida = un post en una red: elige el tópico, PUBLICA EN ECO PRIMERO y
-// después comparte en la red el enlace de ese eco. Si eco falla, no se publica
-// nada en la red (el enlace es el post); si la red falla, el eco ya salió y se
-// dice — el estado solo avanza cuando las dos cosas pasaron.
+// Una corrida = un post en una red: toma la noticia fresca que le toca (`news.js`),
+// PUBLICA EN ECO PRIMERO y después comparte en la red el enlace de ese eco. Si eco falla,
+// no se publica nada en la red (el enlace es el post); si la red falla, el eco ya salió y
+// se dice — el estado solo avanza cuando las dos cosas pasaron.
 //
-// La imagen sale de la propia noticia (`image.js`) y es la misma en los tres
-// sitios: dentro del eco, en la tarjeta del permalink y adjunta al post de la red.
-// Sin imagen de la noticia, Buffer cae al og.jpg del ecosistema.
+// La imagen sale de la propia noticia (`image.js`) y es la misma en los tres sitios:
+// dentro del eco, en la tarjeta del permalink y adjunta al post de la red. Sin imagen de
+// la noticia, Buffer cae al og.jpg del ecosistema.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import os from 'node:os'
-import { waitForSecrets } from '@dotrino/vault/service'
-import { loadBotIdentity, NS } from './identity.js'
+import { loadBotIdentity, loadSecrets } from './identity.js'
 import { publishEco } from './eco.js'
 import { imageForSource } from './image.js'
-import { bodyFor, pickTopic } from './text.js'
+import { bodyFor } from './text.js'
 import { createPost } from './buffer.js'
 import { postDiscord } from './discord.js'
+import { pickNews, readPool, readState, writeState, POST_MAX_AGE_MS } from './news.js'
 
 export const PLATFORMS = ['twitter', 'linkedin', 'discord']
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-
-export function contentPath () { return process.env.SOCIAL_CONTENT || join(ROOT, 'content', 'social-content.json') }
-export function statePath () {
-  return process.env.SOCIAL_STATE || join(process.env.XDG_DATA_HOME || join(os.homedir(), '.local', 'share'), 'dotrino', 'social-bot', 'state.json')
-}
-
-export function readState () {
-  try { return JSON.parse(readFileSync(statePath(), 'utf8')) } catch (_) { return {} }
-}
-export function writeState (all) {
-  mkdirSync(dirname(statePath()), { recursive: true })
-  writeFileSync(statePath(), JSON.stringify(all, null, 2))
-}
+/** Lo que se recuerda por red: es lo que impide publicar dos veces la misma fuente. */
+const HISTORY_MAX = 300
 
 /**
- * @param {{ platform:string, dry?:boolean, only?:string|null, log?:(m:string)=>void }} opts
+ * @param {{ platform:string, dry?:boolean, log?:(m:string)=>void }} opts
  */
-export async function runOnce ({ platform, dry = false, only = null, log = console.log }) {
+export async function runOnce ({ platform, dry = false, log = console.log }) {
   if (!PLATFORMS.includes(platform)) throw new Error(`platform must be one of ${PLATFORMS.join('|')}`)
-  const content = JSON.parse(readFileSync(contentPath(), 'utf8'))
-  const pc = content[platform]
-  if (!pc) throw new Error(`no content for ${platform}`)
   const all = readState()
-  const state = (all[platform] ||= { counts: {}, idx: {}, lastTopic: null, history: [] })
-  state.counts ||= {}; state.idx ||= {}; state.history ||= []
-
-  const topic = pickTopic(pc, state, { weights: { ...(content._weights || {}), ...(pc._weights || {}) }, only })
-  if (!topic) throw new Error(`nothing to publish for ${platform}`)
-  const arr = pc[topic]
-  const item = arr[state.idx[topic] % arr.length]
-  const text = typeof item === 'string' ? item : item.text
-  const source = (typeof item === 'object' && item.source) || null
-  log(`[${platform}] topic=${topic} count=${state.counts[topic]} idx=${state.idx[topic] % arr.length}/${arr.length}${dry ? ' [DRY]' : ''}`)
+  const item = pickNews(readPool(), all, platform)
+  if (!item) {
+    throw Object.assign(new Error(
+      `[${platform}] no fresh news to post (published in the last ${POST_MAX_AGE_MS / 86400000} days and not posted here yet); nothing was published. Run: dotrino-social-bot refresh`
+    ), { code: 'no-fresh-news' })
+  }
+  const text = item.texts[platform]
+  const source = item.source
+  log(`[${platform}] ${item.outlet} ${item.publishedAt.slice(0, 10)} · ${item.title}${dry ? ' [DRY]' : ''}`)
 
   if (dry) {
     log(`[${platform}] text: ${bodyFor(platform, { text, source, ecoUrl: 'https://dotrino.com/p/<cid>' })}`)
     const img = await imageForSource(source, { log: (m) => log(`[${platform}] ${m}`) })
-    return { dry: true, topic, text, source, image: img ? { from: img.from, bytes: img.bytes.length } : null }
+    return { dry: true, item, image: img ? { from: img.from, bytes: img.bytes.length } : null }
   }
 
-  // Secretos del cajón `eco` del vault, con la identidad del enlace (espera a la
-  // bóveda; sin ella no se opera).
   const identity = await loadBotIdentity()
-  const required = platform === 'discord' ? ['DISCORD_BOT_TOKEN', 'DISCORD_GUILD_ID'] : ['BUFFER_API_KEY']
-  const secrets = await waitForSecrets({ ...identity.secretsArgs, onRetry: (e, ms) => log(`[vault] ${e.message}; retry in ${Math.round(ms / 1000)}s`) })
-  const missing = required.filter((k) => !(k in secrets))
-  if (missing.length) throw new Error(`missing secrets in ns "${NS}": ${missing.join(', ')} (dotrino-vault secret set ${NS} KEY=value)`)
+  const secrets = await loadSecrets(identity, platform === 'discord' ? ['DISCORD_BOT_TOKEN', 'DISCORD_GUILD_ID'] : ['BUFFER_API_KEY'], { log })
 
   // 1) la imagen de la noticia (nunca lanza: sin ella el post sale igual)
   const image = await imageForSource(source, { log })
@@ -89,13 +64,10 @@ export async function runOnce ({ platform, dry = false, only = null, log = conso
     log(`[${platform}] buffer ${post.id} ${post.status}${asset ? ' (imagen de la noticia)' : ''}`)
   }
 
-  state.counts[topic]++
-  state.idx[topic]++
-  state.lastTopic = topic
-  state.history.push({ ts: new Date().toISOString(), topic, eco: url, permalink, image: asset?.url || null, text: body.slice(0, 90) })
-  if (state.history.length > 300) state.history = state.history.slice(-300)
-  all[platform] = state
+  const history = all[platform]?.history || []
+  history.push({ ts: new Date().toISOString(), source, title: item.title, eco: url, permalink, image: asset?.url || null, text: body.slice(0, 90) })
+  all[platform] = { history: history.slice(-HISTORY_MAX) }
   writeState(all)
-  log(`[${platform}] OK eco=${eco.id} counts=${JSON.stringify(state.counts)}`)
-  return { topic, eco, url }
+  log(`[${platform}] OK eco=${eco.id}`)
+  return { item, eco, url }
 }

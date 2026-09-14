@@ -2,3 +2,5 @@ node_modules/
 .claude/
 .env
 state.json
+*.log
+*.tmp

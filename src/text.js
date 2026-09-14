@@ -90,23 +90,42 @@ export function bodyFor (platform, { text, source, ecoUrl }) {
 }
 
 /**
- * Elige el tópico: el de menor conteo/peso, sin repetir el último si hay empate.
- * Devuelve null si no hay nada que publicar.
+ * Lo que puede medir cada post redactado por la IA. X: 280 menos el enlace del eco, que
+ * X cuenta como 23 más el espacio.
  */
-export function pickTopic (platformContent, state, { weights = {}, only = null } = {}) {
-  let topics = Object.keys(platformContent)
-    .filter((t) => !t.startsWith('_') && Array.isArray(platformContent[t]) && platformContent[t].length)
-  if (only) topics = topics.filter((t) => t === only)
-  if (!topics.length) return null
-  for (const t of topics) { state.counts[t] ??= 0; state.idx[t] ??= 0 }
-  const w = (t) => (Number(weights[t]) > 0 ? Number(weights[t]) : 1)
-  const share = (t) => state.counts[t] / w(t)
-  const min = Math.min(...topics.map(share))
-  let pool = topics.filter((t) => share(t) === min)
-  if (pool.length > 1 && state.lastTopic && pool.includes(state.lastTopic)) {
-    const alt = pool.filter((t) => t !== state.lastTopic)
-    if (alt.length) pool = alt
-  }
-  pool.sort((a, b) => w(b) - w(a))
-  return pool[0]
+export const POST_LIMITS = {
+  twitter: { min: 80, max: 256 },
+  linkedin: { min: 250, max: 1100 },
+  discord: { min: 120, max: 800 }
+}
+
+// Las formas de voseo que se cuelan. No es la gramática entera: es la lista de lo que
+// CONVENCIONES §9 prohíbe más lo que un modelo suele escribir en un post («revisá», «activá»).
+const VOSEO = [
+  'vos', 'podés', 'querés', 'tenés', 'sabés', 'hacés', 'decís', 'venís', 'mirá', 'fijate', 'fijáte', 'acá',
+  'andá', 'vení', 'decí', 'hacé', 'poné', 'pensá', 'elegí', 'creá', 'jugá', 'unite', 'pegá', 'probá', 'contá',
+  'sumate', 'entrá', 'escribí', 'compartí', 'revisá', 'chequeá', 'animate', 'cuidá', 'protegé', 'leé',
+  'descargá', 'activá', 'desactivá', 'configurá', 'usá', 'instalá', 'borrá', 'cambiá', 'evitá', 'preguntá',
+  'buscá', 'averiguá', 'guardá', 'esperá', 'mandá', 'dejá', 'empezá', 'enterate', 'informate', 'quedate'
+]
+const VOSEO_RE = new RegExp(`(?<!\\p{L})(${VOSEO.join('|')})(?!\\p{L})`, 'giu')
+
+/**
+ * Los fallos de un post redactado; vacío si se puede publicar. Los mensajes van en
+ * inglés (son logs) y se le devuelven tal cual al modelo para que corrija.
+ * @returns {string[]}
+ */
+export function checkPost (platform, text) {
+  const lim = POST_LIMITS[platform]
+  if (!lim) return [`unknown platform ${platform}`]
+  const t = String(text ?? '').trim()
+  const problems = []
+  if (t.length < lim.min) problems.push(`too short (${t.length} chars, min ${lim.min})`)
+  if (t.length > lim.max) problems.push(`too long (${t.length} chars, max ${lim.max})`)
+  if (/\p{Extended_Pictographic}/u.test(t)) problems.push('has emoji')
+  if (/https?:\/\/|www\./i.test(t)) problems.push('has a link (the system adds the source)')
+  if (/dotrino/i.test(t)) problems.push('mentions Dotrino')
+  const vos = [...new Set((t.match(VOSEO_RE) || []).map((w) => w.toLowerCase()))]
+  if (vos.length) problems.push(`voseo: ${vos.join(', ')}`)
+  return problems
 }

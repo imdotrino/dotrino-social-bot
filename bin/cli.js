@@ -2,21 +2,30 @@
 // dotrino-social-bot — CLI.
 //
 //   dotrino-social-bot enroll <invite>        enlaza este bot al vault (pair --service eco)
-//   dotrino-social-bot post <twitter|linkedin|discord> [--dry] [--only <topic>]
+//   dotrino-social-bot refresh [--dry] [--force]
+//                                             deja listas noticias frescas, elegidas y redactadas por IA
+//   dotrino-social-bot post <twitter|linkedin|discord> [--dry]
+//   dotrino-social-bot news                   las noticias redactadas y en qué redes salieron
 //   dotrino-social-bot channels               lista los canales de Buffer (con el token del vault)
 //   dotrino-social-bot whoami                 identidad del bot (aparato, dueño, cert)
 import { parseArgs } from 'node:util'
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { dry: { type: 'boolean', default: false }, only: { type: 'string' }, help: { type: 'boolean', short: 'h' } }
+  options: {
+    dry: { type: 'boolean', default: false },
+    force: { type: 'boolean', default: false },
+    help: { type: 'boolean', short: 'h' }
+  }
 })
 const [cmd, arg] = positionals
 
 const usage = () => {
   console.log(`usage:
   dotrino-social-bot enroll <invite>
-  dotrino-social-bot post <twitter|linkedin|discord> [--dry] [--only <topic>]
+  dotrino-social-bot refresh [--dry] [--force]
+  dotrino-social-bot post <twitter|linkedin|discord> [--dry]
+  dotrino-social-bot news
   dotrino-social-bot channels
   dotrino-social-bot whoami`)
 }
@@ -44,9 +53,38 @@ try {
     // papel del modelo nuevo es `new Date(undefined)` y LANZA `RangeError` — o sea que
     // enrolar terminaba bien y el comando se caía en la última línea.
     console.log(`enrolled: scope ${JSON.stringify(link.cert.scope)} · ${describeCert(link.cert)} · dir ${identityDir()}`)
+  } else if (cmd === 'refresh') {
+    const { refreshNews } = await import('../src/news.js')
+    const getApiKey = values.dry
+      // En seco no se toca la bóveda, igual que `post --dry`: la clave va por el entorno.
+      ? async () => {
+        if (!process.env.DEEPSEEK_API_KEY) throw new Error('refresh --dry reads DEEPSEEK_API_KEY from the environment')
+        return process.env.DEEPSEEK_API_KEY
+      }
+      : async () => {
+        const { loadBotIdentity, loadSecrets } = await import('../src/identity.js')
+        return (await loadSecrets(await loadBotIdentity(), ['DEEPSEEK_API_KEY'])).DEEPSEEK_API_KEY
+      }
+    const { added } = await refreshNews({ getApiKey, dry: values.dry, force: values.force })
+    if (values.dry) {
+      for (const it of added) {
+        console.log(`\n${it.outlet} · ${it.publishedAt.slice(0, 10)} · ${it.source}\n  why: ${it.why}`)
+        for (const [p, t] of Object.entries(it.texts)) console.log(`  ${p} (${t.length}): ${t}`)
+      }
+    }
   } else if (cmd === 'post') {
     const { runOnce } = await import('../src/poster.js')
-    await runOnce({ platform: String(arg || ''), dry: values.dry, only: values.only || null })
+    await runOnce({ platform: String(arg || ''), dry: values.dry })
+  } else if (cmd === 'news') {
+    const { readPool, readState, publishedSources, POST_MAX_AGE_MS } = await import('../src/news.js')
+    const { normalizeUrl } = await import('../src/feeds.js')
+    const published = publishedSources(readState())
+    const now = Date.now()
+    for (const it of readPool().items) {
+      const fresh = now - Date.parse(it.publishedAt) <= POST_MAX_AGE_MS
+      const where = [...(published.get(normalizeUrl(it.source)) || [])].join(',') || '-'
+      console.log(`${it.publishedAt.slice(0, 10)} ${fresh ? 'fresh' : 'stale'} [${where}] ${it.outlet}: ${it.title}`)
+    }
   } else if (cmd === 'channels') {
     const { fetchSecrets } = await import('@dotrino/vault/service')
     const { listChannels } = await import('../src/buffer.js')

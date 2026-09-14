@@ -60,7 +60,7 @@ export function pickImage (html, pageUrl) {
 }
 
 /** Descarga con tope: un cuerpo enorme no se traga entero solo para descartarlo. */
-async function download (url, maxBytes, { fetch: f = fetch, accept, timeoutMs = 20000 } = {}) {
+export async function download (url, maxBytes, { fetch: f = fetch, accept, timeoutMs = 20000 } = {}) {
   const res = await f(url, {
     redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),

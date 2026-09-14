@@ -1,0 +1,29 @@
+{
+ "_doc": "Los medios de donde salen las noticias del bot (`dotrino-social-bot refresh`). Solo medios cuyo feed trae FECHA de publicación y enlaces permanentes: la fecha la pone el medio, no la IA. De lo publicado en los últimos 2 días, la IA elige y redacta (prompts en src/news.js) y el código comprueba lo redactado (checkPost en src/text.js). Añadir un medio = una línea aquí, con `name` tal como se cita en el post («Según <name>…»); se prueba con `DEEPSEEK_API_KEY=… node bin/cli.js refresh --dry`.",
+ "feeds": [
+  { "name": "EFF", "lang": "en", "url": "https://www.eff.org/rss/updates.xml" },
+  { "name": "noyb", "lang": "en", "url": "https://noyb.eu/en/rss" },
+  { "name": "Access Now", "lang": "en", "url": "https://www.accessnow.org/feed/" },
+  { "name": "EDRi", "lang": "en", "url": "https://edri.org/feed/" },
+  { "name": "Privacy International", "lang": "en", "url": "https://privacyinternational.org/rss.xml" },
+  { "name": "The Guardian", "lang": "en", "url": "https://www.theguardian.com/technology/data-protection/rss" },
+  { "name": "The Markup", "lang": "en", "url": "https://themarkup.org/feeds/rss.xml" },
+  { "name": "404 Media", "lang": "en", "url": "https://www.404media.co/rss/" },
+  { "name": "Rest of World", "lang": "en", "url": "https://restofworld.org/feed/latest/" },
+  { "name": "TechCrunch", "lang": "en", "url": "https://techcrunch.com/category/privacy/feed/" },
+  { "name": "MIT Technology Review", "lang": "en", "url": "https://www.technologyreview.com/topic/policy/feed" },
+  { "name": "The Record", "lang": "en", "url": "https://therecord.media/feed" },
+  { "name": "Wired", "lang": "en", "url": "https://www.wired.com/feed/category/security/latest/rss" },
+  { "name": "Ars Technica", "lang": "en", "url": "https://arstechnica.com/security/feed/" },
+  { "name": "BleepingComputer", "lang": "en", "url": "https://www.bleepingcomputer.com/feed/" },
+  { "name": "The Register", "lang": "en", "url": "https://www.theregister.com/security/headlines.atom" },
+  { "name": "Krebs on Security", "lang": "en", "url": "https://krebsonsecurity.com/feed/" },
+  { "name": "Schneier on Security", "lang": "en", "url": "https://www.schneier.com/feed/atom/" },
+  { "name": "Malwarebytes", "lang": "en", "url": "https://www.malwarebytes.com/blog/feed/index.xml" },
+  { "name": "WeLiveSecurity", "lang": "en", "url": "https://www.welivesecurity.com/en/rss/feed/" },
+  { "name": "El País", "lang": "es", "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/tecnologia/portada" },
+  { "name": "elDiario.es", "lang": "es", "url": "https://www.eldiario.es/rss/tecnologia/" },
+  { "name": "Xataka", "lang": "es", "url": "https://www.xataka.com/feedburner.xml" },
+  { "name": "Hipertextual", "lang": "es", "url": "https://hipertextual.com/feed" }
+ ]
+}

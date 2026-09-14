@@ -13,6 +13,7 @@
 
 import { loadLink, clientLink, dataDir, renewLink } from '@dotrino/remote-agent/link'
 import { pubkeyId } from '@dotrino/identity/capabilities'
+import { waitForSecrets } from '@dotrino/vault/service'
 
 export const NS = 'eco'
 export const LABEL = 'social-bot'
@@ -57,4 +58,15 @@ export async function loadBotIdentity () {
     /** Lo que piden `fetchSecrets`/`waitForSecrets` cuando la identidad no vive en `service-identity.json`. */
     secretsArgs: { ns: NS, proxyUrl: link.proxy, masterPubkey: raw.iss, device: raw.device, cert: raw.cert, enc: raw.enc }
   }
+}
+
+/**
+ * Los secretos del cajón `eco`. Espera a la bóveda (sin ella no se opera) y lanza si
+ * falta alguno de `required`.
+ */
+export async function loadSecrets (identity, required, { log = console.log } = {}) {
+  const secrets = await waitForSecrets({ ...identity.secretsArgs, onRetry: (e, ms) => log(`[vault] ${e.message}; retry in ${Math.round(ms / 1000)}s`) })
+  const missing = required.filter((k) => !(k in secrets))
+  if (missing.length) throw new Error(`missing secrets in ns "${NS}": ${missing.join(', ')} (dotrino-vault secret set ${NS} KEY=value)`)
+  return secrets
 }
