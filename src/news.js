@@ -127,8 +127,8 @@ Tono: sobrio e informativo. Cuenta el hecho y por qué importa para los datos de
 
 Las tres versiones:
 - "twitter": entre 120 y 250 caracteres EN TOTAL, contando uno o dos hashtags al final (#privacidad, #ciberseguridad, #IA…).
-- "linkedin": entre 400 y 1000 caracteres. Registro profesional: el hecho, el contexto y la consecuencia práctica. Uno o dos hashtags al final.
-- "discord": entre 200 y 700 caracteres. Conversacional y en tuteo, como quien comenta la noticia con la comunidad. Sin hashtags.
+- "linkedin": entre 400 y 850 caracteres, nunca más de 850. Registro profesional: el hecho, el contexto y la consecuencia práctica, sin enumerar todos los detalles. Uno o dos hashtags al final.
+- "discord": entre 200 y 600 caracteres, nunca más de 600. Conversacional y en tuteo, como quien comenta la noticia con la comunidad. Sin hashtags.
 
 Responde SOLO con JSON: {"twitter":"…","linkedin":"…","discord":"…"}`
 
