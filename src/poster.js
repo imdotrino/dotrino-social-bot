@@ -61,7 +61,7 @@ export async function runOnce ({ platform, dry = false, log = console.log }) {
       // `undefined` deja el og.jpg del ecosistema; `null` lo dejaría SIN imagen.
       image: asset || undefined
     })
-    log(`[${platform}] buffer ${post.id} ${post.status}${asset ? ' (imagen de la noticia)' : ''}`)
+    log(`[${platform}] buffer ${post.id} ${post.status}${asset ? ' (news image)' : ''}`)
   }
 
   const history = all[platform]?.history || []

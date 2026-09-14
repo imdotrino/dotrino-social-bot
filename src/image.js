@@ -92,7 +92,7 @@ export async function normalize (bytes, { maxBytes = IMAGE_MAX_BYTES, maxWidth =
     if (out.data.length <= maxBytes) break
   }
   if (last.data.length > maxBytes) {
-    throw Object.assign(new Error(`no cabe en ${maxBytes} bytes ni al mínimo de calidad (${last.data.length})`), { code: 'too-large' })
+    throw Object.assign(new Error(`does not fit in ${maxBytes} bytes even at the lowest quality (${last.data.length})`), { code: 'too-large' })
   }
   return { bytes: last.data, mime: 'image/jpeg', width: last.info.width, height: last.info.height }
 }
