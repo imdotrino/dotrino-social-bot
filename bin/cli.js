@@ -7,7 +7,7 @@
 //   dotrino-social-bot post <twitter|linkedin|discord> [--dry]
 //   dotrino-social-bot news                   las noticias redactadas y en qué redes salieron
 //   dotrino-social-bot channels               lista los canales de Buffer (con el token del vault)
-//   dotrino-social-bot whoami                 identidad del bot (aparato, dueño, cert)
+//   dotrino-social-bot info [--json]          qué aparato es el bot: su ID primero (alias: whoami)
 import { parseArgs } from 'node:util'
 
 const { positionals, values } = parseArgs({
@@ -15,6 +15,7 @@ const { positionals, values } = parseArgs({
   options: {
     dry: { type: 'boolean', default: false },
     force: { type: 'boolean', default: false },
+    json: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h' }
   }
 })
@@ -27,14 +28,8 @@ const usage = () => {
   dotrino-social-bot post <twitter|linkedin|discord> [--dry]
   dotrino-social-bot news
   dotrino-social-bot channels
-  dotrino-social-bot whoami`)
-}
-
-/** Cómo se describe un papel ahora: por el acta a la que se ató, no por un reloj. */
-function describeCert (cert) {
-  if (typeof cert?.seq === 'number') return `acta #${cert.seq}`
-  if (typeof cert?.exp === 'number') return `modelo viejo · vence ${new Date(cert.exp).toISOString().slice(0, 10)}`
-  return 'sin papel'
+  dotrino-social-bot info [--json]   qué aparato es el bot: su ID (el de «dotrino-vault members»),
+                                     su bóveda y sus permisos. Sin red. (alias: whoami)`)
 }
 
 try {
@@ -92,17 +87,19 @@ try {
     const secrets = await fetchSecrets((await loadBotIdentity()).secretsArgs)
     if (!secrets.BUFFER_API_KEY) throw new Error('missing BUFFER_API_KEY in ns eco')
     for (const c of await listChannels(secrets.BUFFER_API_KEY)) console.log(`${c.service.padEnd(9)} ${c.id}  ${c.displayName}${c.isDisconnected ? ' (DISCONNECTED)' : ''}`)
-  } else if (cmd === 'whoami') {
-    const { loadBotIdentity, identityDir } = await import('../src/identity.js')
-    const id = await loadBotIdentity()
-    console.log(JSON.stringify({
-      dir: identityDir(), owner: id.owner, scope: id.raw.cert.scope,
-      // `seq` con el modelo nuevo; `exp` solo si todavía lleva uno viejo, que es justo lo
-      // que quien mira necesita saber (le falta migrar y ese sí caduca).
-      seq: id.raw.cert.seq ?? null,
-      ...(typeof id.raw.cert.exp === 'number' ? { exp: new Date(id.raw.cert.exp).toISOString(), legacy: true } : {}),
-      publickey: id.publickey
-    }, null, 2))
+  } else if (cmd === 'info' || cmd === 'whoami') {
+    // La pieza común de todos los comandos (CONVENCIONES §15.1): lo que se viene a mirar es
+    // el ID. Sin red: lee el enlace, sin renovar ni pedir nada a la bóveda.
+    const { loadLink } = await import('@dotrino/remote-agent/link')
+    const { deviceInfo, formatDeviceInfo } = await import('@dotrino/vault/device-info')
+    const { identityDir, NS, LABEL } = await import('../src/identity.js')
+    const { createRequire } = await import('node:module')
+    const { version } = createRequire(import.meta.url)('../package.json')
+    const dir = identityDir()
+    const link = loadLink(dir)
+    if (!link) throw new Error(`not enrolled: run \`dotrino-social-bot enroll <invite>\` (dir ${dir})`)
+    const info = await deviceInfo(link, { kind: LABEL, ns: NS, version, dir })
+    console.log(values.json ? JSON.stringify(info, null, 2) : formatDeviceInfo(info))
   } else { usage(); process.exit(2) }
 } catch (e) {
   console.error(e.message)
