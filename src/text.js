@@ -95,7 +95,7 @@ export function bodyFor (platform, { text, source, ecoUrl }) {
  */
 export const POST_LIMITS = {
   twitter: { min: 80, max: 256 },
-  linkedin: { min: 250, max: 1100 },
+  linkedin: { min: 200, max: 600 },
   discord: { min: 120, max: 800 }
 }
 
