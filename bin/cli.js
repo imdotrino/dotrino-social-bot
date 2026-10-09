@@ -117,16 +117,11 @@ function describeCert (cert) {
 /**
  * §15: el bot corre por cron desde un checkout, así que su código es el de `main`; lo que se
  * queda atrás son sus pilares. Al terminar la orden, y por stderr (cron lo manda al log).
- * Con caché de un día y tope: no hace lenta la orden.
  */
 async function depsNotice () {
   try {
-    const { installedDeps } = await import('@dotrino/update/deps')
-    const { printUpdateNotice } = await import('@dotrino/update/notice')
+    const { printDependencyNotices } = await import('@dotrino/update/deps')
     const { fileURLToPath } = await import('node:url')
-    const deps = installedDeps({ dir: fileURLToPath(new URL('..', import.meta.url)) })
-    await Promise.all(deps.map((d) => printUpdateNotice({
-      current: d.version, source: 'npm', pkg: d.pkg, product: d.pkg, how: 'bump it in package.json'
-    })))
+    await printDependencyNotices({ dir: fileURLToPath(new URL('..', import.meta.url)) })
   } catch (e) { console.error('[update] could not check the dependencies:', e.code || e.message) }
 }
