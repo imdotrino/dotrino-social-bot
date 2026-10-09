@@ -101,7 +101,32 @@ try {
     const info = await deviceInfo(link, { kind: LABEL, ns: NS, version, dir })
     console.log(values.json ? JSON.stringify(info, null, 2) : formatDeviceInfo(info))
   } else { usage(); process.exit(2) }
+  await depsNotice()
 } catch (e) {
   console.error(e.message)
   process.exit(1)
+}
+
+/** How a certificate is described now: by the record it is tied to, not by a clock. */
+function describeCert (cert) {
+  if (typeof cert?.seq === 'number') return `record #${cert.seq}`
+  if (typeof cert?.exp === 'number') return `old model · expires ${new Date(cert.exp).toISOString().slice(0, 10)}`
+  return 'no certificate'
+}
+
+/**
+ * §15: el bot corre por cron desde un checkout, así que su código es el de `main`; lo que se
+ * queda atrás son sus pilares. Al terminar la orden, y por stderr (cron lo manda al log).
+ * Con caché de un día y tope: no hace lenta la orden.
+ */
+async function depsNotice () {
+  try {
+    const { installedDeps } = await import('@dotrino/update/deps')
+    const { printUpdateNotice } = await import('@dotrino/update/notice')
+    const { fileURLToPath } = await import('node:url')
+    const deps = installedDeps({ dir: fileURLToPath(new URL('..', import.meta.url)) })
+    await Promise.all(deps.map((d) => printUpdateNotice({
+      current: d.version, source: 'npm', pkg: d.pkg, product: d.pkg, how: 'bump it in package.json'
+    })))
+  } catch (e) { console.error('[update] could not check the dependencies:', e.code || e.message) }
 }
