@@ -1,6 +1,6 @@
 {
   "name": "dotrino-social-bot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Bot social de Dotrino: publica primero en eco (como aparato del perfil de Dotrino) y luego comparte el enlace en X, LinkedIn y Discord.",
   "type": "module",
   "license": "MIT",
@@ -23,11 +23,11 @@
   "dependencies": {
     "@dotrino/content-client": "0.2.4",
     "@dotrino/geo": "0.9.0",
-    "@dotrino/identity": "0.109.0",
+    "@dotrino/identity": "0.116.0",
     "@dotrino/proxy-client": "0.30.4",
     "@dotrino/remote-agent": "0.18.0",
     "@dotrino/update": "0.7.0",
-    "@dotrino/vault": "0.82.1",
+    "@dotrino/vault": "0.86.0",
     "sharp": "0.35.4"
   },
   "repository": {
